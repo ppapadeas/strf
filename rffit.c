@@ -290,7 +290,11 @@ int main(int argc,char *argv[])
       break;
 
     case 'i':
-      satno=atoi(optarg);
+      // NORAD number, plain (100000) or alpha-5 (A0000)
+      if (strlen(optarg)==5 && alpha5_to_number(optarg)>=0)
+        satno=alpha5_to_number(optarg);
+      else
+        satno=atoi(optarg);
       break;
 
     case 'F':
