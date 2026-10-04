@@ -495,7 +495,7 @@ int is_classified(int satno)
     flag=0;
   } else {
     // Look for the object (TLE with alpha-5 numbers, or OMM)
-    if (read_elset(file,satno,&orb,NULL)==0)
+    if (satno>0 && read_elset(file,satno,&orb,NULL)==0)
       flag=1;
     fclose(file);
   }
