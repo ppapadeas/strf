@@ -658,7 +658,9 @@ struct trace *compute_trace(char *tlefile,double *mjd,int n,int site_id,float fr
 
       // Copy sat name into trace
       if (tle->name != NULL) {
-        strncpy(t[j].satname, tle->name, 25);
+        // OMM names can be longer than the 24 characters of a TLE name line
+        strncpy(t[j].satname, tle->name, sizeof(t[j].satname) - 1);
+        t[j].satname[sizeof(t[j].satname) - 1] = '\0';
       }
 
       // Loop over points
