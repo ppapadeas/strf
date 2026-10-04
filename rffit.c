@@ -109,6 +109,17 @@ void diagonal_select(float x0,float y0,float x1,float y1,int flag)
   return;
 }
 
+// Elements as rffit writes them: the derivatives and the revolution number
+// are zero, since they do not follow a fit or a change of epoch
+orbit_t fitted_elements(orbit_t orb)
+{
+  orb.ndot2=0.0;
+  orb.nddot6=0.0;
+  orb.norb=0;
+
+  return orb;
+}
+
 int identify_satellite_from_doppler(tle_array_t *tle_array, double rmsmax)
 {
   int i=0,flag=0;
@@ -585,7 +596,8 @@ int main(int argc,char *argv[])
 	if (d.satname != NULL) {
 	  cpgmtxt("T", 3.0, 0.0, 0.0, d.satname);
 	}
-	if (format_tle(&orb,line1,line2)==0) {
+	orbit_t fitted=fitted_elements(orb);
+	if (format_tle(&fitted,line1,line2)==0) {
 	  cpgmtxt("T",2.0,0.0,0.0,line1);
 	  cpgmtxt("T",1.0,0.0,0.0,line2);
 	} else {
@@ -1848,14 +1860,18 @@ void print_tle(orbit_t orb,char *filename,char *satname)
     printf("Failed to open %s\n",filename);
     return;
   }
+  orb=fitted_elements(orb);
   if (format_tle(&orb,line1,line2)==0) {
     if (satname!=NULL)
       fprintf(file,"%s\n%s\n%s\n",satname,line1,line2);
     else
       fprintf(file,"%s\n%s\n",line1,line2);
+  } else if (orb.satno>ALPHA5_MAX) {
+    printf("Catalog number %d does not fit a TLE, writing OMM (KVN) instead\n",orb.satno);
+    if (write_omm_kvn(file,&orb,satname)!=0)
+      printf("Elements of %d could not be written\n",orb.satno);
   } else {
-    printf("Elements of %d do not fit a TLE, writing OMM (KVN) instead\n",orb.satno);
-    write_omm_kvn(file,&orb,satname);
+    printf("Elements of %d cannot be written as a TLE\n",orb.satno);
   }
 
   mjd2date(mjdmin,&year,&month,&day);
